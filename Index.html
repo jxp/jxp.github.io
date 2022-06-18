@@ -1,0 +1,177 @@
+<html>
+<head>
+    <style>
+        body{
+            background-image: url('background.png');
+            background-repeat: repeat;
+            margin: 2em;
+        }
+        form {
+            display: grid;
+            grid-template-columns: max-content max-content;
+            grid-gap:  0.3em;
+        }
+        label {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        input {
+            margin: 0.25em;
+        }
+
+        /* Style the button that is used to open and close the collapsible content */
+        .collapsible {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 1em;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+
+            /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+            .active, .collapsible:hover {
+                background-color: #ccc;
+            }
+
+        /* Style the collapsible content. Note: hidden by default */
+        .content {
+            padding: 0 1em;
+            display: none;
+            overflow: hidden;
+            background-color: #f1f1f1;
+        } 
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function (event) {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('e')) {
+                var message = '';
+                document.getElementById('errorHeading').style.display = '';
+
+                switch (parseInt(params.get('e'))) {
+                    case 101:
+                        message = ' Invalid formation';
+                        break;
+                    case 102:
+                        message = ' No formation specified';
+                        break;
+                    case 103:
+                        message = ' Invalid number of players';
+                        break;
+                    case 104:
+                        message = ' No players given';
+                        break;
+                    default:
+                        message = ' Unexpected error';
+                }
+                document.getElementById('errorHeading').innerText += message;
+            }
+            if (params.get('f')) {
+                document.getElementById('formation').value = params.get('f');
+            }
+            if (params.get('p')) {
+                var playerList = params.get('p').split(',');
+                for (var index = 0; index < playerList.length && index < 11; index++) {
+                    document.getElementById('p' + index.toString(16)).value = playerList[index];
+                }
+                if (playerList.length > 11) {
+                    document.getElementById('extraLabel').style.display = '';
+                    document.getElementById('px').value = playerList.slice(11).join(',');
+                    document.getElementById('px').style.display = '';
+                }
+            }
+
+            // Setup any collapsible sections
+            var coll = document.getElementsByClassName("collapsible");
+            var i;
+
+            for (i = 0; i < coll.length; i++) {
+                coll[i].addEventListener("click", function () {
+                    this.classList.toggle("active");
+                    var content = this.nextElementSibling;
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
+                });
+            }
+
+        });
+
+        function addPlayerFromControl(controlID) {
+            var controlValue = document.getElementById(controlID).value;
+            if (controlValue) {
+                this.push(controlValue);
+            }
+            return this;
+        }
+
+        function populatePlayers() {
+            var playerList = [];
+            playerList.addNonEmpty = addPlayerFromControl;
+            playerList.addNonEmpty('p0').addNonEmpty('p1').addNonEmpty('p2').addNonEmpty('p3').addNonEmpty('p4').addNonEmpty('p5');
+            playerList.addNonEmpty('p6').addNonEmpty('p7').addNonEmpty('p8').addNonEmpty('p9').addNonEmpty('pa');
+
+            document.getElementById("allPlayers").value = playerList.join(',');
+        }
+    </script>
+
+</head>
+<body>
+    <h1>Squad Layout</h1>
+    <h2 style="display:none; color:red" id="errorHeading">An error has occurred -</h2>
+
+    <button type="button" class="collapsible">Instructions</button>
+    <div class="content">
+        <p>This page allows you to build a layout for a football squad.</p>
+        <p>It produces both an image and text layout for the given squad.</p>
+
+        <p>You can go direct to the squad page and </p>
+        <ul>
+            <li>specify the formation of the 10 outfield players in the f parameter (e.g. f=442)</li>
+            <li>specify the list of players in the p parameter. The players should be listed goalkeeper to attackers and left to right (e.g. gk,lb,cb,cb,rb,lw,m,m,rw,s,s)</li>
+        </ul>
+
+        <p>Alternatively you can use this page to choose a formation and enter the players names.</p>
+    </div>
+    <p></p>
+        <form action="Squad.html" method="get">
+            <label for="formation">Common formations: </label>
+            <select name="f" id="formation">
+                <option value="442">4-4-2</option>
+                <option value="433">4-3-3</option>
+                <option value="451">4-5-1</option>
+                <option value="352">3-5-2</option>
+                <option value="4132">4-1-3-2</option>
+                <option value="4231">4-2-3-1</option>
+                <option value="3412">3-4-1-2</option>
+            </select>
+
+            <label for="p0">Players:</label><input type="text" id="p0" placeholder="Goalkeeper" />
+            <label for="p1"></label><input type="text" id="p1" />
+            <label for="p2"></label><input type="text" id="p2" />
+            <label for="p3"></label><input type="text" id="p3" />
+            <label for="p4"></label><input type="text" id="p4" />
+            <label for="p5"></label><input type="text" id="p5" />
+            <label for="p6"></label><input type="text" id="p6" />
+            <label for="p7"></label><input type="text" id="p7" />
+            <label for="p8"></label><input type="text" id="p8" />
+            <label for="p9"></label><input type="text" id="p9" />
+            <label for="pa"></label><input type="text" id="pa" />
+            <label for="px" style="display:none;" id="extraLabel">Extra players</label><input type="text" style="display:none;background-color: lightpink" readonly id="px" />
+            <input type="hidden" name="p" id="allPlayers" />
+            <label></label><input type="submit" onclick="populatePlayers()" value="Show" />
+        </form>
+        <button type="button" class="collapsible">Examples</button>
+        <div class="content">
+            <p>England 1966 - <a href="Squad.html?f=4132&p=Banks,Wilson,Moore,J Charlton,Cohen,Stiles,Peters,B Charlton,Ball,Hunt,Hurst">Squad.html?f=4132&p=Banks,Wilson,Moore,J Charlton,Cohen,Stiles,Peters,B Charlton,Ball,Hunt,Hurst</a></p>
+            <p>Brazil 1970 - <a href="Squad.html?f=442&p=Felix,Everaldo,Piazza,Brito,Carlos Alberto,Rivelino,Gerson,Clodoaldo,Jairzinho,Pele,Tostao">Squad.html?f=442&p=Felix,Everaldo,Piazza,Brito,Carlos Alberto,Rivelino,Gerson,Clodoaldo,Jairzinho,Pele,Tostao</a></p>
+            <p>Spain 2010 - <a href="Squad.html?f=4231&p=Casillas,Capdevila,Puyol,Pique,Ramos,Alonso,Busquets,Pedro,Xavi,Iniesta,Villa">Squad.html?f=4231&p=Casillas,Capdevila,Puyol,Pique,Ramos,Alonso,Busquets,Pedro,Xavi,Iniesta,Villa</a></p>
+        </div>
+</body>
+</html>

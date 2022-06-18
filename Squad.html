@@ -1,0 +1,167 @@
+<html>
+<head>
+  <style>
+    #container {
+      display: flex;
+      height: 617px;
+      width: 800px;
+      background: url("Pitch.png");
+      flex-direction: column;
+    }
+
+    .columns-container {
+      display: flex;
+      align-items: center;
+      flex: 1 1 auto;
+    }
+
+    .column {
+      flex: 1 1 auto;
+      justify-content: center;
+      color: white;
+      text-shadow: 2px 2px 2px #000000;
+      text-align: center;
+      font-size: 24pt;
+    }
+
+    #textVersion {
+        font-family: 'Courier New';
+        white-space: pre;
+        cursor:pointer;
+    }
+
+    h3 {
+        cursor:pointer;
+    }
+  </style>
+  <script>
+      function showError(errorCode) {
+        var currentSearch = window.location.search;
+        window.location.href="index.html" + window.location.search + (currentSearch ? "&": "?") + (errorCode == 0 ? "" : "e=" + errorCode);
+    }
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        var params = new URLSearchParams(window.location.search);
+        var maxRow = 1;
+
+      if (params.get('f')) {
+        var formation = Array.from(params.get('f'));
+        // Check we have 10 outfield players in formation
+        var playerCheck = 0;
+          formation.forEach(l => {
+              var currentRow = parseInt(l);
+              playerCheck += currentRow;
+              if (currentRow > maxRow) {
+                  maxRow = currentRow;
+              }
+        });
+        if (playerCheck != 10) {
+          showError(101);
+        }
+        formation.unshift('1');
+      } else {
+        showError(102);
+      }
+      if (params.get('p')) {
+        var players = params.get('p').split(',');
+        if (players.length != 11) {
+          showError(103);
+        }
+      } else {
+        showError(104);
+        }
+
+        // Find the longest player name
+        var longestName = players[0].length;
+        for (var pNum = 1; pNum < players.length; pNum++) {
+            if (players[pNum].length > longestName) {
+                longestName = players[pNum].length;
+            }
+        }
+
+        // Go backwards through the formation
+        var playersDone = 0;
+        var elementRoot = document.getElementById('container');
+        var playersText = '';
+        var maxChars = (longestName * maxRow) + maxRow - 1;
+
+        for (var i = formation.length - 1; i >= 0; i--) {
+        var formationRow = document.createElement('div');
+        formationRow.setAttribute('class', 'columns-container');
+	
+        var currentRow = parseInt(formation[i]);
+        var currentPlayers = players.slice(11-playersDone-currentRow,11-playersDone);
+        // Layout the image of the squad
+	    currentPlayers.forEach(p => {
+          var playerCell = document.createElement('div');
+            playerCell.setAttribute('class', 'column');
+            playerCell.setAttribute('style', 'width: ' + (100 / currentRow) + '%');
+          playerCell.textContent = p;
+          formationRow.append(playerCell);
+        });
+
+            // Layout the text of the squad
+        var lengthPerPlayer = (maxChars - currentRow + 1) / currentRow;
+            currentPlayers.forEach(p => {
+                var spacePrefix = Math.round((lengthPerPlayer - p.length) / 2);
+                var spaceSuffix = lengthPerPlayer - p.length - spacePrefix;
+                playersText += ' '.repeat(spacePrefix) + p + ' '.repeat(spaceSuffix+1);
+        });
+        playersText += '<br/>';
+        playersDone += currentRow;
+	
+        elementRoot.append(formationRow);
+        }
+
+        document.getElementById('textVersion').innerHTML = playersText;
+
+    });
+      function fallbackCopyTextToClipboard(text) {
+          var textArea = document.createElement("textarea");
+          textArea.value = text;
+
+          // Avoid scrolling to bottom
+          textArea.style.top = "0";
+          textArea.style.left = "0";
+          textArea.style.position = "fixed";
+
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+
+          try {
+              var successful = document.execCommand('copy');
+              var msg = successful ? 'successful' : 'unsuccessful';
+              console.log('Fallback: Copying text command was ' + msg);
+          } catch (err) {
+              console.error('Fallback: Oops, unable to copy', err);
+          }
+
+          document.body.removeChild(textArea);
+      }
+      function copyTextToClipboard(text) {
+          if (!navigator.clipboard) {
+              fallbackCopyTextToClipboard(text);
+              return;
+          }
+          navigator.clipboard.writeText(text).then(function () {
+              console.log('Async: Copying to clipboard was successful!');
+          }, function (err) {
+              console.error('Async: Could not copy text: ', err);
+          });
+      }
+
+      function copyText(control) {
+          copyTextToClipboard(control.text ?? control.innerText);
+      }
+  </script>
+</head>
+  <body>
+    <h3 onclick="showError(0)">Squad Layout - Image</h3>
+    <div id="container">
+    </div>
+    <h3 onclick="showError(0)">Squad Layout - Text</h3>
+    <div id="textVersion" onclick="copyText(this)">
+    </div>
+  </body>
+</html>
